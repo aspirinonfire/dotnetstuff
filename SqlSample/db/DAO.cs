@@ -92,7 +92,7 @@ namespace SqlSample.db
 
 
     /// <summary>
-    /// Get user by email using pure ADO.NET
+    /// Get user by email using pure sql
     /// </summary>
     /// <remarks>
     /// This call will create sql connection
