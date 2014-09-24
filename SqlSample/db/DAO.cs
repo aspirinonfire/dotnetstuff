@@ -62,7 +62,7 @@ namespace SqlSample.db
     public async Task<User> getUserByEmailEFRawDbSql(string email)
     {
       User user = null;
-      SqlParameter emailParam = new SqlParameter(this.emailParamName, SqlDbType.VarChar, 50);
+      SqlParameter emailParam = new SqlParameter(this.emailParamName, SqlDbType.VarChar, 100);
       emailParam.Value = email;
  
       user = await this.dbContext.Database.SqlQuery<User>(this.userSql, emailParam).FirstOrDefaultAsync();
@@ -82,7 +82,7 @@ namespace SqlSample.db
     public async Task<User> getUserByEmailEFRawEntitySql(string email)
     {
       User user = null;
-      SqlParameter emailParam = new SqlParameter(this.emailParamName, SqlDbType.VarChar, 50);
+      SqlParameter emailParam = new SqlParameter(this.emailParamName, SqlDbType.VarChar, 100);
       emailParam.Value = email;
 
       user = await this.dbContext.users.SqlQuery(this.userSql, emailParam).FirstOrDefaultAsync();
