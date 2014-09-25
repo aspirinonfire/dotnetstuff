@@ -35,10 +35,10 @@ namespace SqlSample
 
       using (DAO dao = new DAO())
       {
-        daoMethods.Add("Get using EF", dao.getUserByEmailEF);
-        daoMethods.Add("Get using EF database raw sql", dao.getUserByEmailEFRawDbSql);
-        daoMethods.Add("Get using EF entity raw sql", dao.getUserByEmailEFRawEntitySql);
-        daoMethods.Add("Get using pure sql", dao.getUserByEmailPureSql);
+        daoMethods.Add("Get User using EF", dao.getUserByEmailEF);
+        daoMethods.Add("Get User using EF database raw sql", dao.getUserByEmailEFRawDbSql);
+        daoMethods.Add("Get User using EF entity raw sql", dao.getUserByEmailEFRawEntitySql);
+        daoMethods.Add("Get User using pure sql", dao.getUserByEmailPureSql);
 
         foreach (string methodDescription in daoMethods.Keys)
         {
@@ -52,7 +52,7 @@ namespace SqlSample
           }
           catch (Exception ex)
           {
-            Console.WriteLine("Exception occured: {0}", ex.Message);
+            Console.WriteLine("Exception occurred: {0}", ex.Message);
           }
         }
       }
