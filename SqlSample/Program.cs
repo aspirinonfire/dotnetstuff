@@ -44,17 +44,25 @@ namespace SqlSample
         {
           // get dao method delegate and execute it
           // serialize results and display in console
-          try
-          {
-            var daoMethod = daoMethods[methodDescription];
-            User user = await daoMethod.Invoke(carolEmail);
-            Console.WriteLine("{0}:\t{1}\n", methodDescription, JsonConvert.SerializeObject(user));
-          }
-          catch (Exception ex)
-          {
-            Console.WriteLine("Exception occured: {0}", ex.Message);
-          }
+          var daoMethod = daoMethods[methodDescription];
+          await waitResult(daoMethod, methodDescription, carolEmail);
         }
+
+        // run recursive query
+        await waitResult(dao.getCategoryHierarchy, "Recursive query result", null);
+      }
+    }
+
+    static async Task waitResult<T>(Func<string, Task<T>> method, string methodDescription, string param)
+    {
+      try
+      {
+        var user = await method.Invoke(param);
+        Console.WriteLine("{0}:\t{1}\n", methodDescription, JsonConvert.SerializeObject(user));
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine("Exception occured: {0}", ex.Message);
       }
     }
   }

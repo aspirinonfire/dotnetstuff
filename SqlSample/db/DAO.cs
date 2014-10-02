@@ -136,6 +136,39 @@ namespace SqlSample.db
     }
 
 
+    public async Task<IEnumerable<CategoryHierarchy>> getCategoryHierarchy(string childname)
+    {
+      string sql = @"
+        with categoryhiearchy (id, child, parentcategoryid, parent)
+        as
+        (
+          -- base case
+          select cc.id, cc.name as child, cc.parentCategoryId, pc.name as parent
+          from Categories cc
+          left outer join Categories pc on cc.parentCategoryId = pc.id
+          where cc.parentCategoryId is null
+          -- recursive case
+          union all
+          select cc.id, cc.name as child, cc.parentCategoryId, pc.name as parent
+          from Categories cc
+          inner join Categories pc on cc.parentCategoryId = pc.id
+          inner join categoryhiearchy ch on cc.parentCategoryId = ch.id
+        )
+        select ch.child, ch.parent
+        from categoryhiearchy ch
+        option (maxrecursion 100) ";
+
+      //SqlParameter childParam = new SqlParameter("@childname", SqlDbType.VarChar, 50);
+      //childParam.Value = childname;
+
+      var hierarchyList = await this.dbContext.Database.SqlQuery(typeof(CategoryHierarchy), sql).ToListAsync();
+      var hierarchy = hierarchyList.Cast<CategoryHierarchy>();
+
+
+      return hierarchy;
+    }
+
+
     public void Dispose()
     {
       this.dbContext.Dispose();

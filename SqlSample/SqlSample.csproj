@@ -52,12 +52,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="db\Cart.cs" />
+    <Compile Include="db\Category.cs" />
+    <Compile Include="db\CategoryHierarchy.cs" />
     <Compile Include="db\DAO.cs" />
     <Compile Include="db\MyDBContext.cs" />
     <Compile Include="db\User.cs" />
     <Compile Include="Migrations\201409240300315_usercarts.cs" />
     <Compile Include="Migrations\201409240300315_usercarts.Designer.cs">
       <DependentUpon>201409240300315_usercarts.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201410020216170_category.cs" />
+    <Compile Include="Migrations\201410020216170_category.Designer.cs">
+      <DependentUpon>201410020216170_category.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
@@ -70,6 +76,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201409240300315_usercarts.resx">
       <DependentUpon>201409240300315_usercarts.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201410020216170_category.resx">
+      <DependentUpon>201410020216170_category.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
