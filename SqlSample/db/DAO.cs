@@ -144,7 +144,7 @@ namespace SqlSample.db
     public async Task<IEnumerable<CategoryHierarchy>> getCategoryHierarchy(string childname)
     {
       string sql = @"
-        WITH categoryhiearchy (id, child, parentcategoryid, parent)
+        WITH categoryhierarchy (id, child, parentcategoryid, parent)
         AS
         (
           -- base case
@@ -157,10 +157,10 @@ namespace SqlSample.db
           SELECT cc.id, cc.name AS child, cc.parentCategoryId, pc.name AS parent
           FROM Categories cc
           INNER JOIN Categories pc ON cc.parentCategoryId = pc.id
-          INNER JOIN categoryhiearchy ch ON cc.parentCategoryId = ch.id
+          INNER JOIN categoryhierarchy ch ON cc.parentCategoryId = ch.id
         )
         SELECT ch.child, ch.parent
-        FROM categoryhiearchy ch
+        FROM categoryhierarchy ch
         OPTION (MAXRECURSION 100) ";
 
       //SqlParameter childParam = new SqlParameter("@childname", SqlDbType.VarChar, 50);
