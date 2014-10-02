@@ -50,6 +50,11 @@ namespace SqlSample
 
         // run recursive query
         await waitResult(dao.getCategoryHierarchy, "Recursive query result", null);
+
+        // execute upsert commands
+        string visitorname = "alex";
+        await waitResult(dao.upsertVisitor, "Upsert visitor (insert)", visitorname);
+        await waitResult(dao.upsertVisitor, "Upsert visitor (update)", visitorname);
       }
     }
 

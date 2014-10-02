@@ -173,6 +173,41 @@ namespace SqlSample.db
       return hierarchy;
     }
 
+    /// <summary>
+    /// Execute UPSERT sql query using MERGE
+    /// </summary>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public async Task<Visitor> upsertVisitor(string name)
+    {
+      string sql = @"
+        declare @result table
+        (
+          action varchar(50),
+          id int
+        )
+
+        MERGE visitors AS TARGET
+        USING (SELECT @visitorname) AS SOURCE(name)
+        ON TARGET.name = SOURCE.name
+        WHEN MATCHED THEN
+          UPDATE SET lastvisit = current_timestamp
+        WHEN NOT MATCHED BY TARGET THEN
+          INSERT (name, firstvisit) VALUES (@visitorname, current_timestamp)
+        OUTPUT $action, inserted.id into @result;
+
+        select r.action, v.*
+        from visitors v
+        inner join @result r on v.id = r.id;";
+
+      SqlParameter childParam = new SqlParameter("@visitorname", SqlDbType.VarChar, 50);
+      childParam.Value = name;
+
+      var results = await this.dbContext.Database.SqlQuery(typeof(Visitor), sql, childParam).ToListAsync();
+      Visitor visitor = results.Cast<Visitor>().FirstOrDefault();
+      return visitor;
+    }
+
 
     public void Dispose()
     {

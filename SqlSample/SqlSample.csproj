@@ -57,6 +57,7 @@
     <Compile Include="db\DAO.cs" />
     <Compile Include="db\MyDBContext.cs" />
     <Compile Include="db\User.cs" />
+    <Compile Include="db\Visitor.cs" />
     <Compile Include="Migrations\201409240300315_usercarts.cs" />
     <Compile Include="Migrations\201409240300315_usercarts.Designer.cs">
       <DependentUpon>201409240300315_usercarts.cs</DependentUpon>
@@ -64,6 +65,10 @@
     <Compile Include="Migrations\201410020216170_category.cs" />
     <Compile Include="Migrations\201410020216170_category.Designer.cs">
       <DependentUpon>201410020216170_category.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201410022023057_visitors.cs" />
+    <Compile Include="Migrations\201410022023057_visitors.Designer.cs">
+      <DependentUpon>201410022023057_visitors.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Program.cs" />
@@ -79,6 +84,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201410020216170_category.resx">
       <DependentUpon>201410020216170_category.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201410022023057_visitors.resx">
+      <DependentUpon>201410022023057_visitors.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -25,5 +25,6 @@ namespace SqlSample.db
     public DbSet<User> users { get; set; }
     public DbSet<Cart> carts { get; set; }
     public DbSet<Category> categories { get; set; }
+    public DbSet<Visitor> visitors { get; set; }
   }
 }

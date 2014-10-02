@@ -70,6 +70,10 @@ namespace SqlSample.Migrations
         );
       }
       #endregion
+
+      #region seed visitors (truncate table)
+      context.Database.ExecuteSqlCommand("TRUNCATE TABLE visitors");
+      #endregion
     }
   }
 }
