@@ -31,7 +31,7 @@ namespace SqlSample
     {
       // dictionary to hold dao method delegates
       Dictionary<string, Func<string, Task<User>>> daoMethods = new Dictionary<string, Func<string, Task<User>>>();
-      string carolEmail = "carol@noemail.com";
+      string email = "alex@noemail.com";
 
       using (DAO dao = new DAO())
       {
@@ -45,7 +45,7 @@ namespace SqlSample
           // get dao method delegate and execute it
           // serialize results and display in console
           var daoMethod = daoMethods[methodDescription];
-          await waitResult(daoMethod, methodDescription, carolEmail);
+          await waitResult(daoMethod, methodDescription, email);
         }
 
         // run recursive query
@@ -53,12 +53,20 @@ namespace SqlSample
       }
     }
 
-    static async Task waitResult<T>(Func<string, Task<T>> method, string methodDescription, string param)
+    /// <summary>
+    /// This method invokes a delegate and displays execution results
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="method"></param>
+    /// <param name="methodDescription"></param>
+    /// <param name="param"></param>
+    /// <returns></returns>
+    private static async Task waitResult<T>(Func<string, Task<T>> method, string methodDescription, string param)
     {
       try
       {
-        var user = await method.Invoke(param);
-        Console.WriteLine("{0}:\t{1}\n", methodDescription, JsonConvert.SerializeObject(user));
+        T result = await method.Invoke(param);
+        Console.WriteLine("===== {0} =====\n{1}\n", methodDescription, JsonConvert.SerializeObject(result, Formatting.Indented));
       }
       catch (Exception ex)
       {

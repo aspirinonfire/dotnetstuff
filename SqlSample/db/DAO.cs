@@ -136,27 +136,32 @@ namespace SqlSample.db
     }
 
 
+    /// <summary>
+    /// Execute recursive query by using common table expression (CTE)
+    /// </summary>
+    /// <param name="childname"></param>
+    /// <returns></returns>
     public async Task<IEnumerable<CategoryHierarchy>> getCategoryHierarchy(string childname)
     {
       string sql = @"
-        with categoryhiearchy (id, child, parentcategoryid, parent)
-        as
+        WITH categoryhiearchy (id, child, parentcategoryid, parent)
+        AS
         (
           -- base case
-          select cc.id, cc.name as child, cc.parentCategoryId, pc.name as parent
-          from Categories cc
-          left outer join Categories pc on cc.parentCategoryId = pc.id
-          where cc.parentCategoryId is null
+          SELECT cc.id, cc.name AS child, cc.parentCategoryId, pc.name AS parent
+          FROM Categories cc
+          LEFT OUTER JOIN Categories pc ON cc.parentCategoryId = pc.id
+          WHERE cc.parentCategoryId IS NULL
           -- recursive case
-          union all
-          select cc.id, cc.name as child, cc.parentCategoryId, pc.name as parent
-          from Categories cc
-          inner join Categories pc on cc.parentCategoryId = pc.id
-          inner join categoryhiearchy ch on cc.parentCategoryId = ch.id
+          UNION ALL
+          SELECT cc.id, cc.name AS child, cc.parentCategoryId, pc.name AS parent
+          FROM Categories cc
+          INNER JOIN Categories pc ON cc.parentCategoryId = pc.id
+          INNER JOIN categoryhiearchy ch ON cc.parentCategoryId = ch.id
         )
-        select ch.child, ch.parent
-        from categoryhiearchy ch
-        option (maxrecursion 100) ";
+        SELECT ch.child, ch.parent
+        FROM categoryhiearchy ch
+        OPTION (MAXRECURSION 100) ";
 
       //SqlParameter childParam = new SqlParameter("@childname", SqlDbType.VarChar, 50);
       //childParam.Value = childname;
