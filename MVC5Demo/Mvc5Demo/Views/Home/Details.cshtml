@@ -1,34 +1,29 @@
 ﻿@model Mvc5Demo.Home.HomeViewModel
 
 @{
-    ViewBag.Title = "Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Details";
+  Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
 <h2>Details</h2>
+<hr />
 
 <div>
-    <h4>Full Details</h4>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>
-            @Html.DisplayNameFor(model => model.name)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.name)
-        </dd>
-
-        <dt>
-            @Html.DisplayNameFor(model => model.email)
-        </dt>
-
-        <dd>
-            @Html.DisplayFor(model => model.email)
-        </dd>
-
-    </dl>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>@Html.DisplayNameFor(model => model.name)</th>
+        <th>@Html.DisplayNameFor(model => model.email)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>@Html.DisplayFor(model => model.name)</td>
+        <td>@Html.DisplayFor(model => model.email)</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 <p>
-    @Html.ActionLink("Back to List", "All")
+  @Html.ActionLink("Back to List", "All")
 </p>
