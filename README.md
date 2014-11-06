@@ -12,5 +12,6 @@ This is a collection of unrelated to each other .Net projects.
       <li>Simple service oriented architecture</li>
     </ul>
   </li>
+  <li><b>TPLDemo</b> - Dataflow from Task Parallel Library demo</li>
 </ul>
 
