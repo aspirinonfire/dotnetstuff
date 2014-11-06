@@ -47,8 +47,7 @@ namespace TPLDemo
       #region set up data flow pipeline
       // set up broadcast block which will enqueue file paths
       // throttle number of items available in queue at the time
-      var srcOpts = new DataflowBlockOptions { BoundedCapacity = 100 };
-      var srcBlk = new BroadcastBlock<string>(path => path);
+      var srcBlk = new BroadcastBlock<string>(path => path, new DataflowBlockOptions { BoundedCapacity = 100 });
 
       // set up parallel filters
       TransformBlock<string, string> processFilter;
@@ -79,7 +78,7 @@ namespace TPLDemo
 
           Interlocked.Add(ref lineSum, currentLineCount);
         }
-      }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 100, MaxMessagesPerTask = 100 });
+      }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = 100 });
       filtersResultParser.LinkTo(saveFiltered, new DataflowLinkOptions { PropagateCompletion = true });
       queuedCompletions.Add(saveFiltered.Completion);
       #endregion
