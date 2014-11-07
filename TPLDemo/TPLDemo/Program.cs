@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
-using TPLDemo.filters;
 using System.Linq;
+using System.Threading;
 
 namespace TPLDemo
 {
@@ -19,43 +19,80 @@ namespace TPLDemo
   {
     static void Main(string[] args)
     {
-      Stopwatch stopWatch = new Stopwatch();
-
-      //string targetPath = @"C:\Users\alexc.alexc-pc\Desktop\goalcoach_nodejs\goalcoach_nodejs";
-      //FileProcessor processor = new FileProcessor();
-      //processor.addParallelFileFilter(new ExtensionFilter("js"));
-      //string[] paths = processor.traverseDirectory(targetPath);
-      //stopWatch.Start();
-      //var task = processor.run(paths);
-      //task.Wait();
-      //stopWatch.Stop();
-      //Console.WriteLine("Total line count of filtered files: {0}", task.Result);
-
-      // create long task that executes for 1000ms
-      int maxItemsInQueue = 2;
-      int degreeOfParallelism = 2;
-      int numberOfItemsToProcess = 10;
-
-      LongTaskExecutor executor = new LongTaskExecutor(maxItemsInQueue, degreeOfParallelism);
-      var numbers = Enumerable.Range(1, numberOfItemsToProcess).ToArray();
-
-      stopWatch.Start();
-      var t = executor.runSlowIntSum(numbers);
-      t.Wait();
-      stopWatch.Stop();
-      Console.WriteLine("Sum of all numbers between {0} and {1} is {2}", 1, numberOfItemsToProcess, t.Result);
-
-      Console.WriteLine("Execution time: {0}ms", stopWatch.ElapsedMilliseconds);
+      executeFilteredIntAggregator().Wait();
 
       Console.WriteLine("=== Done ===");
       Console.ReadLine();
     }
 
-    static IEnumerable<int> sequentialNumGenerator(int start, int end)
+
+    /// <summary>
+    /// Execute demo Dataflow pipeline that aggregates a collection
+    /// </summary>
+    /// <returns></returns>
+    static async Task executeFilteredIntAggregator()
     {
-      for (int i = start; i < end; ++i)
+      Stopwatch stopWatch = new Stopwatch();
+
+      // pipeline settings
+      int maxItemsInQueue = Environment.ProcessorCount;
+      int degreeOfParallelism = Environment.ProcessorCount;
+
+      // filters
+      Predicate<int> evenItemFilter = (item) => (item % 2) == 0;
+      Predicate<int> oddItemFilter = (item) => (item % 2) != 0;
+      Predicate<int> positiveItemFilter = (item) => item >= 0;
+      Predicate<int> negativeItemFilter = (item) => item < 0;
+
+      // final consumer
+      int sum = 0;
+      Action<int> finalConsumer =
+        (item) =>
+        {
+          // TODO adjust this value depending on your computer resources
+          for (long i = 0; i < 1000000000; ++i)
+          {
+            // noop
+          }
+
+          /**
+           * Sum up filtered item using atomic operation that is thread-safe
+           */
+          Interlocked.Add(ref sum, item);
+        };
+
+      Predicate<int> itemFilter = evenItemFilter;
+      LongTaskExecutor<int> longTaskExecutor = new LongTaskExecutor<int>(maxItemsInQueue, degreeOfParallelism, itemFilter, finalConsumer);
+      //IEnumerable<int> items = Enumerable.Range(1, 25);
+      IEnumerable<int> items = randomIntGenerator(100, 25);
+
+      stopWatch.Start();
+      await longTaskExecutor.executePipeline(items);
+      stopWatch.Stop();
+      Console.WriteLine("Sum of all numbers that pass filter is {0}", sum);
+
+      Console.WriteLine("Execution time: {0}ms", stopWatch.ElapsedMilliseconds);
+    }
+
+
+
+    /// <summary>
+    /// Generate random number with random sign
+    /// </summary>
+    /// <param name="max">Max value of the random number</param>
+    /// <param name="total">Total number of numbers to produce</param>
+    /// <returns></returns>
+    static IEnumerable<int> randomIntGenerator(int max, int total)
+    {
+      Random rnd = new Random();
+
+      while (total > 0)
       {
-        yield return i;
+        --total;
+        int sign = rnd.Next(2) == 0 ? 1: -1;
+
+        // yield computed random number
+        yield return sign * rnd.Next(max);
       }
     }
   }

@@ -156,3 +156,4 @@ $RECYCLE.BIN/
 .DS_Store
 /SqlSample/packages
 /MVC5Demo/packages
+/TPLDemo/packages/Microsoft.Tpl.Dataflow.4.5.23
