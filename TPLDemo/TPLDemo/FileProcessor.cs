@@ -23,6 +23,25 @@ namespace TPLDemo
       this.parallelFileFilters = new List<IFileFilter>();
     }
 
+    /// <summary>
+    /// Recursively traverse target path and retrieve all files
+    /// </summary>
+    /// <param name="targetPath"></param>
+    /// <returns></returns>
+    public string[] traverseDirectory(string targetPath)
+    {
+      if (Directory.Exists(targetPath))
+      {
+        string[] filePaths = Directory.GetFiles(targetPath, "*", SearchOption.AllDirectories);
+
+        return filePaths;
+      }
+      else
+      {
+        return new string[0];
+      }
+    }
+
 
     /// <summary>
     /// Add file filter that will be executed in parallel with other file filters

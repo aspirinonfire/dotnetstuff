@@ -48,6 +48,8 @@
     <Compile Include="FileProcessor.cs" />
     <Compile Include="filters\ExtensionFilter.cs" />
     <Compile Include="filters\IFileFilter.cs" />
+    <Compile Include="LongTask.cs" />
+    <Compile Include="LongTaskExecutor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

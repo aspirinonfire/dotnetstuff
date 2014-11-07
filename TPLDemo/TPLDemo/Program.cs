@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using TPLDemo.filters;
+using System.Linq;
 
 namespace TPLDemo
 {
@@ -16,44 +17,45 @@ namespace TPLDemo
   /// </summary>
   class Program
   {
-
     static void Main(string[] args)
     {
-      string targetPath = @"C:\Users\alexc.alexc-pc\Desktop\goalcoach_nodejs\goalcoach_nodejs";
-      string[] paths = traverseDirectory(targetPath);
-
-      FileProcessor processor = new FileProcessor();
-      processor.addParallelFileFilter(new ExtensionFilter("js"));
-
       Stopwatch stopWatch = new Stopwatch();
 
+      //string targetPath = @"C:\Users\alexc.alexc-pc\Desktop\goalcoach_nodejs\goalcoach_nodejs";
+      //FileProcessor processor = new FileProcessor();
+      //processor.addParallelFileFilter(new ExtensionFilter("js"));
+      //string[] paths = processor.traverseDirectory(targetPath);
+      //stopWatch.Start();
+      //var task = processor.run(paths);
+      //task.Wait();
+      //stopWatch.Stop();
+      //Console.WriteLine("Total line count of filtered files: {0}", task.Result);
+
+      // create long task that executes for 1000ms
+      int maxItemsInQueue = 2;
+      int degreeOfParallelism = 2;
+      int numberOfItemsToProcess = 10;
+
+      LongTaskExecutor executor = new LongTaskExecutor(maxItemsInQueue, degreeOfParallelism);
+      var numbers = Enumerable.Range(1, numberOfItemsToProcess).ToArray();
+
       stopWatch.Start();
-      var task = processor.run(paths);
-      task.Wait();
+      var t = executor.runSlowIntSum(numbers);
+      t.Wait();
       stopWatch.Stop();
+      Console.WriteLine("Sum of all numbers between {0} and {1} is {2}", 1, numberOfItemsToProcess, t.Result);
+
       Console.WriteLine("Execution time: {0}ms", stopWatch.ElapsedMilliseconds);
-      Console.WriteLine("Total line count of filtered files: {0}", task.Result);
 
       Console.WriteLine("=== Done ===");
       Console.ReadLine();
     }
 
-    /// <summary>
-    /// Recursively traverse target path and retrieve all files
-    /// </summary>
-    /// <param name="targetPath"></param>
-    /// <returns></returns>
-    static string[] traverseDirectory(string targetPath)
+    static IEnumerable<int> sequentialNumGenerator(int start, int end)
     {
-      if (Directory.Exists(targetPath))
+      for (int i = start; i < end; ++i)
       {
-        string[] filePaths = Directory.GetFiles(targetPath, "*", SearchOption.AllDirectories);
-        
-        return filePaths;
-      }
-      else
-      {
-        return new string[0];
+        yield return i;
       }
     }
   }
