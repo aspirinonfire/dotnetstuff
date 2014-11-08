@@ -9,6 +9,11 @@ using System.Threading;
 
 namespace TPLDemo
 {
+  /// <summary>
+  /// Generic TPL Dataflow pipeline. Implements Producer-Consumer pattern
+  /// Producer --> filter --> Consumer
+  /// </summary>
+  /// <typeparam name="In"></typeparam>
   public class LongTaskExecutor<In>
   {
     List<Task> queuedCompletions;
@@ -83,7 +88,7 @@ namespace TPLDemo
       foreach (In item in items)
       {
         /**
-         * Wait for an available slot and add item to a source queue.
+         * Wait for an available slot and add an item to a source queue.
          * Number o slots is defined by BoundedCapacity in producerBlk.
          */
         await producerBlk.SendAsync(item);

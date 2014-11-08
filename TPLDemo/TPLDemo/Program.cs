@@ -75,7 +75,6 @@ namespace TPLDemo
     }
 
 
-
     /// <summary>
     /// Generate random number with random sign
     /// </summary>

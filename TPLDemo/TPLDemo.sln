@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TPLDemo", "TPLDemo\TPLDemo.csproj", "{FA2513A6-C2E0-4898-AFAF-C1C69E31269C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageFinder", "ImageFinder\ImageFinder.csproj", "{9DC3EB7A-0766-4461-AF8E-EA00E8027ECF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{FA2513A6-C2E0-4898-AFAF-C1C69E31269C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FA2513A6-C2E0-4898-AFAF-C1C69E31269C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FA2513A6-C2E0-4898-AFAF-C1C69E31269C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DC3EB7A-0766-4461-AF8E-EA00E8027ECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DC3EB7A-0766-4461-AF8E-EA00E8027ECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DC3EB7A-0766-4461-AF8E-EA00E8027ECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DC3EB7A-0766-4461-AF8E-EA00E8027ECF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
