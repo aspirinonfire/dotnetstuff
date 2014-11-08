@@ -22,7 +22,7 @@ namespace TPLDemo
     
     /// <summary>
     /// Create Long task executor object.
-    /// THis constructor creates and configures Dataflow pipeline
+    /// This constructor creates and configures Dataflow pipeline
     /// </summary>
     /// <param name="maxInSrcQ">Max number of items that can be stored in queue at the same time</param>
     /// <param name="degreeOfPrl">Max number of threads that can be spawned to execute specific block</param>
@@ -70,7 +70,7 @@ namespace TPLDemo
        * Conditionally link Producer to a consumer
        * based on whether or not produced item passes a specified filter (predicate).
        * IMPORTANT: link producer to nullTarget so the item doesn't stay in the src queue
-       * to avoid potential memory leaks if the item doesn't pass filter.
+       * to avoid potential memory leaks if the item doesn't match filter.
        * This also prevents deadlocks.
        */
       DataflowBlock.LinkTo(producerBlk, consumerBlk, propogateCompletionOpt, itemFilter);

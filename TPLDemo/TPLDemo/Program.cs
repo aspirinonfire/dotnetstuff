@@ -61,7 +61,7 @@ namespace TPLDemo
           Interlocked.Add(ref sum, item);
         };
 
-      Predicate<int> itemFilter = evenItemFilter;
+      Predicate<int> itemFilter = positiveItemFilter;
       LongTaskExecutor<int> longTaskExecutor = new LongTaskExecutor<int>(maxItemsInQueue, degreeOfParallelism, itemFilter, finalConsumer);
       //IEnumerable<int> items = Enumerable.Range(1, 25);
       IEnumerable<int> items = randomIntGenerator(100, 25);
@@ -69,7 +69,7 @@ namespace TPLDemo
       stopWatch.Start();
       await longTaskExecutor.executePipeline(items);
       stopWatch.Stop();
-      Console.WriteLine("Sum of all numbers that pass filter is {0}", sum);
+      Console.WriteLine("Sum of all numbers that match filter is {0}", sum);
 
       Console.WriteLine("Execution time: {0}ms", stopWatch.ElapsedMilliseconds);
     }
