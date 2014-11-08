@@ -15,9 +15,12 @@ namespace ImageFinder
       ImageProcessor imageProcessor = new ImageProcessor(Environment.ProcessorCount);
 
       string directory = @"C:\Users\Public\Pictures\Sample Pictures";
-      imageFilters = new List<Predicate<Image>>();
-      imageFilters.Add(ImageFilter.minResolutionFilterFactory(800, 600));
-      imageFilters.Add(ImageFilter.aspectRatioFilterFactory(3.0/2));
+      imageFilters = new List<Predicate<Image>>()
+      {
+        ImageFilter.minResolutionFilterFactory(width: 800, height: 600),
+        ImageFilter.aspectRatioFilterFactory(horizontal: 4, vertical: 3, threshold: 0.01)
+      };
+
 
       var task = imageProcessor.getMatchedImagesInDirectory(directory, imageFilters);
       task.Wait();

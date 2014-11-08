@@ -20,12 +20,13 @@ namespace ImageFinder
       return filter;
     }
 
-    public static Predicate<Image> aspectRatioFilterFactory(double ratio, double ratioThreshold = 0.01)
+    public static Predicate<Image> aspectRatioFilterFactory(int horizontal, int vertical, double threshold = 0.01)
     {
+      double ratio = (double)horizontal / vertical;
       Predicate<Image> filter =
         (img) =>
         {
-          return Math.Abs((double)img.Width / img.Height - ratio) <= ratioThreshold;
+          return Math.Abs((double)img.Width / img.Height - ratio) <= threshold;
         };
 
       return filter;

@@ -33,13 +33,28 @@ namespace ImageFinder
     /// <param name="compositeImageFilter"></param>
     /// <param name="processorAction"></param>
     /// <returns></returns>
-    private Pipeline pipelineFactory(Predicate<string> compositeImageFilter, Action<string> processorAction)
+    private Pipeline pipelineFactory(IEnumerable<Predicate<Image>> imageFilters, Action<string> processorAction)
     {
       List<Task> pipelineCompletions = new List<Task>();
+      var execOpts = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = degreeOfParallelism };
+      var linkOpts = new DataflowLinkOptions { PropagateCompletion = true }; 
 
       // file path producer
       BufferBlock<string> producer = new BufferBlock<string>(new DataflowBlockOptions { BoundedCapacity = 100 });
       pipelineCompletions.Add(producer.Completion);
+
+      // filter transform block
+      TransformBlock<string, string> filterBlk = new TransformBlock<string, string>(
+        (path) =>
+        {
+          using (Image img = Image.FromFile(path))
+          {
+            bool takeImage = imageFilters.All(filter => filter.Invoke(img));
+            return takeImage ? path : null;
+          }
+        },
+        execOpts);
+      pipelineCompletions.Add(filterBlk.Completion);
 
       // final consumer block
       ActionBlock<string> consumer = new ActionBlock<string>(
@@ -47,35 +62,16 @@ namespace ImageFinder
         {
           processorAction.Invoke(path);
         },
-        new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = degreeOfParallelism });
+        execOpts);
       pipelineCompletions.Add(consumer.Completion);
 
-      // conditionally link producer and consumer on image filter results
-      DataflowBlock.LinkTo(producer, consumer, new DataflowLinkOptions { PropagateCompletion = true }, compositeImageFilter);
-      producer.LinkTo(DataflowBlock.NullTarget<string>());
+      // link blocks
+      producer.LinkTo(filterBlk, linkOpts);
+      DataflowBlock.LinkTo(filterBlk, consumer, linkOpts, (path) => !String.IsNullOrWhiteSpace(path));
+      filterBlk.LinkTo(DataflowBlock.NullTarget<string>());
 
       Pipeline pipeline = new Pipeline { pipelineCompletions = pipelineCompletions, producer = producer };
-
       return pipeline;
-    }
-
-
-    /// <summary>
-    /// Combine multiple image filters into one AND filter
-    /// </summary>
-    /// <param name="imageFilters"></param>
-    /// <returns></returns>
-    private Predicate<string> compositeImageFilterFactory(IEnumerable<Predicate<Image>> imageFilters)
-    {
-      Predicate<string> compositeFilter =
-      (path) =>
-      {
-        var img = Image.FromFile(path);
-
-        return imageFilters.All(action => action.Invoke(img));
-      };
-
-      return compositeFilter;
     }
 
 
@@ -88,7 +84,7 @@ namespace ImageFinder
     /// <returns></returns>
     private async Task pipelineRunner(IEnumerable<string> paths, IEnumerable<Predicate<Image>> imageFilters, Action<string> processorAction)
     {
-      var pipeline = pipelineFactory(compositeImageFilterFactory(imageFilters), processorAction);
+      var pipeline = pipelineFactory(imageFilters, processorAction);
 
       foreach (string path in paths)
       {
