@@ -194,5 +194,30 @@ namespace ImageFinder
 
       return matchedFiles;
     }
+
+
+    /// <summary>
+    /// Search images that match supplied filters
+    /// </summary>
+    /// <param name="directory"></param>
+    /// <param name="imageFilters"></param>
+    /// <returns>Collection of image paths</returns>
+    public async Task<IEnumerable<string>> searchImages(string directory, IEnumerable<Predicate<Image>> imageFilters)
+    {
+      ConcurrentQueue<string> matches = new ConcurrentQueue<string>();
+
+      Func<FileStream, Task> processorAction =
+        (src) =>
+        {
+          return Task.Factory.StartNew(
+            () => matches.Enqueue(src.Name));
+        };
+
+      var paths = Directory.EnumerateFiles(directory, "*.jpg", SearchOption.AllDirectories);
+
+      await pipelineRunner(paths, imageFilters, processorAction);
+
+      return matches;
+    }
   }
 }

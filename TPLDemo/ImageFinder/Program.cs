@@ -25,6 +25,7 @@ namespace ImageFinder
       Console.WriteLine("Running image processor... this may take awhile");
       Console.WriteLine("Source: {0} \nDestination: {1}", srcDirectory, dstDirectory);
       var task = imageProcessor.copyMatchingImages(srcDirectory, dstDirectory, imageFilters);
+      //var task = imageProcessor.searchImages(srcDirectory, imageFilters);
       task.Wait();
 
       Console.WriteLine("====================");
