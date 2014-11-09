@@ -71,27 +71,23 @@ namespace ImageFinder
 
       // image filter transform block
       TransformBlock<FileStream, FileStream> imageFilterBlk = new TransformBlock<FileStream, FileStream>(
-        async (src) =>
+        (src) =>
         {
           bool takeImage = false;
 
-          await Task.Factory.StartNew(
-            () =>
+          try
+          {
+            using (Image img = Image.FromStream(src))
             {
-              try
-              {
-                using (Image img = Image.FromStream(src))
-                {
-                  takeImage = imageFilters.All(filter => filter.Invoke(img));
-                }
-                src.Seek(0, SeekOrigin.Begin);
-              }
-              catch (Exception ex)
-              {
-                // silently drop exceptions and treat path as bad image
-              }
-            });
-
+              takeImage = imageFilters.All(filter => filter.Invoke(img));
+            }
+            src.Seek(0, SeekOrigin.Begin);
+          }
+          catch (Exception ex)
+          {
+            // silently drop exceptions and treat path as bad image
+          }
+          
           return takeImage ? src : null;
         },
         execOpts);
@@ -216,6 +212,8 @@ namespace ImageFinder
       ConsumerAction consumerAction =
         (src) =>
         {
+          // This is actually bad, sync code shouldn't be wrapped async...
+          // But I did it anyways to match delegate signature
           return Task.Factory.StartNew(
             () => matches.Enqueue(src.Name));
         };
