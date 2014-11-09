@@ -17,20 +17,52 @@ namespace TPLDemo
   /// </summary>
   class Program
   {
+    // TODO adjust this value depending on your computer resources
+    private static readonly long noopCycles = 1000000000;
+
     static void Main(string[] args)
     {
-      executeFilteredIntAggregator().Wait();
-
+      //executePipeline().Wait();
+      executeParallel();
       Console.WriteLine("=== Done ===");
       Console.ReadLine();
     }
 
 
     /// <summary>
-    /// Execute demo Dataflow pipeline that aggregates a collection
+    /// Execute action using TPL Parallel
     /// </summary>
     /// <returns></returns>
-    static async Task executeFilteredIntAggregator()
+    static void executeParallel()
+    {
+      int sum = 0;
+      IEnumerable<int> items = randomIntGenerator(100, 25);
+
+      Action<int> parallelAction =
+        (item) =>
+        {
+          Console.WriteLine("Processing {0}", item);
+          noop();
+          if (item >= 0)
+          {
+            Console.WriteLine("Summing {0}", item);
+            Interlocked.Add(ref sum, item);
+          }
+        };
+
+      Parallel.ForEach(items,
+        new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount },
+        parallelAction);
+
+      Console.WriteLine("Sum {0}", sum);
+    }
+
+    /// <summary>
+    /// Execute demo Dataflow pipeline that applies aggregate action
+    /// against a collection of items
+    /// </summary>
+    /// <returns></returns>
+    static async Task executePipeline()
     {
       Stopwatch stopWatch = new Stopwatch();
 
@@ -49,11 +81,7 @@ namespace TPLDemo
       Action<int> finalConsumer =
         (item) =>
         {
-          // TODO adjust this value depending on your computer resources
-          for (long i = 0; i < 1000000000; ++i)
-          {
-            // noop
-          }
+          noop();
 
           /**
            * Sum up filtered item using atomic operation that is thread-safe
@@ -92,6 +120,17 @@ namespace TPLDemo
 
         // yield computed random number
         yield return sign * rnd.Next(max);
+      }
+    }
+
+    /// <summary>
+    /// Spin cpu all around
+    /// </summary>
+    static void noop()
+    {
+      for (long i = 0; i < noopCycles; ++i)
+      {
+        // noop
       }
     }
   }
