@@ -19,6 +19,8 @@ namespace ImageFinder
       public IEnumerable<Task> pipelineCompletions {get; set; }
     };
 
+    private delegate Task ConsumerAction(FileStream src);
+
     private readonly int degreeOfParallelism;
 
     public ImageProcessor(int degreeOfParallelism)
@@ -32,9 +34,9 @@ namespace ImageFinder
     /// producer -> pathToStreamBlk -> imageFilterBlk -> consumer
     /// </summary>
     /// <param name="compositeImageFilter"></param>
-    /// <param name="processorAction"></param>
+    /// <param name="consumerAction"></param>
     /// <returns></returns>
-    private Pipeline pipelineFactory(IEnumerable<Predicate<Image>> imageFilters, Func<FileStream, Task> processorAction)
+    private Pipeline pipelineFactory(IEnumerable<Predicate<Image>> imageFilters, ConsumerAction consumerAction)
     {
       List<Task> pipelineCompletions = new List<Task>();
       var execOpts = new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = degreeOfParallelism };
@@ -69,20 +71,26 @@ namespace ImageFinder
 
       // image filter transform block
       TransformBlock<FileStream, FileStream> imageFilterBlk = new TransformBlock<FileStream, FileStream>(
-        (src) =>
+        async (src) =>
         {
           bool takeImage = false;
-          try
-          {
-            using (Image img = Image.FromStream(src))
+
+          await Task.Factory.StartNew(
+            () =>
             {
-              takeImage = imageFilters.All(filter => filter.Invoke(img));
-            }
-          }
-          catch (Exception ex)
-          {
-            // silently drop exceptions and treat path as bad image
-          }
+              try
+              {
+                using (Image img = Image.FromStream(src))
+                {
+                  takeImage = imageFilters.All(filter => filter.Invoke(img));
+                }
+                src.Seek(0, SeekOrigin.Begin);
+              }
+              catch (Exception ex)
+              {
+                // silently drop exceptions and treat path as bad image
+              }
+            });
 
           return takeImage ? src : null;
         },
@@ -95,7 +103,7 @@ namespace ImageFinder
       ActionBlock<FileStream> consumer = new ActionBlock<FileStream>(
         async (src) =>
         {
-          await processorAction.Invoke(src);
+          await consumerAction.Invoke(src);
           src.Close();
           src.Dispose();
         },
@@ -114,11 +122,11 @@ namespace ImageFinder
     /// </summary>
     /// <param name="paths"></param>
     /// <param name="imageFilters"></param>
-    /// <param name="processorAction"></param>
+    /// <param name="consumerAction"></param>
     /// <returns></returns>
-    private async Task pipelineRunner(IEnumerable<string> paths, IEnumerable<Predicate<Image>> imageFilters, Func<FileStream, Task> processorAction)
+    private async Task pipelineRunner(IEnumerable<string> paths, IEnumerable<Predicate<Image>> imageFilters, ConsumerAction consumerAction)
     {
-      var pipeline = pipelineFactory(imageFilters, processorAction);
+      var pipeline = pipelineFactory(imageFilters, consumerAction);
 
       Console.WriteLine("Processing {0} file(s)", paths.Count());
       foreach (string path in paths)
@@ -144,7 +152,7 @@ namespace ImageFinder
       bool destinationExists = Directory.Exists(destination);
 
       // define action that copies matched images to a destination
-      Func<FileStream, Task> processorAction =
+      ConsumerAction consumerAction =
         async (src) =>
         {
           StringBuilder filenameBuilder = new StringBuilder();
@@ -179,7 +187,6 @@ namespace ImageFinder
           // copy image to a new location
           using (FileStream dst = File.Create(newFile))
           {
-            src.Seek(0, SeekOrigin.Begin);
             await src.CopyToAsync(dst);
             await dst.FlushAsync();
           }
@@ -190,7 +197,7 @@ namespace ImageFinder
 
       var paths = Directory.EnumerateFiles(directory, "*.jpg", SearchOption.AllDirectories);
 
-      await pipelineRunner(paths, imageFilters, processorAction);
+      await pipelineRunner(paths, imageFilters, consumerAction);
 
       return matchedFiles;
     }
@@ -206,7 +213,7 @@ namespace ImageFinder
     {
       ConcurrentQueue<string> matches = new ConcurrentQueue<string>();
 
-      Func<FileStream, Task> processorAction =
+      ConsumerAction consumerAction =
         (src) =>
         {
           return Task.Factory.StartNew(
@@ -215,7 +222,7 @@ namespace ImageFinder
 
       var paths = Directory.EnumerateFiles(directory, "*.jpg", SearchOption.AllDirectories);
 
-      await pipelineRunner(paths, imageFilters, processorAction);
+      await pipelineRunner(paths, imageFilters, consumerAction);
 
       return matches;
     }
