@@ -14,22 +14,22 @@ namespace ImageFinder
       List<Predicate<Image>> imageFilters;
       ImageProcessor imageProcessor = new ImageProcessor(Environment.ProcessorCount);
 
-      string srcDirectory = @"E:\aspirin_docs\pictures\wallpapers";
-      string dstDirectory = @"C:\Users\aspirin\Desktop\wallpaperworthy";
+      string srcDirectory = @"C:\Users\Public\Pictures\Sample Pictures";
+      string dstDirectory = @"C:\Users\alexc.alexc-pc\Desktop\wallpaperworthy";
       imageFilters = new List<Predicate<Image>>()
       {
-        ImageFilter.minResolutionFilterFactory(width: 1440, height: 900),
-        ImageFilter.aspectRatioFilterFactory(horizontal: 16, vertical: 10, threshold: 0.01)
+        ImageFilter.minResolutionFilterFactory(width: 800, height: 600),
+        //ImageFilter.aspectRatioFilterFactory(horizontal: 16, vertical: 10, threshold: 0.01)
       };
 
       Console.WriteLine("Running image processor... this may take awhile");
       Console.WriteLine("Source: {0} \nDestination: {1}", srcDirectory, dstDirectory);
-      var task = imageProcessor.copyMatchingImages(srcDirectory, dstDirectory, imageFilters);
-      //var task = imageProcessor.searchImages(srcDirectory, imageFilters);
-      task.Wait();
+      //var task = imageProcessor.copyMatchingImagesAsync(srcDirectory, dstDirectory, imageFilters);
+      //var task = imageProcessor.searchImagesAsync(srcDirectory, imageFilters);
+      //task.Wait();
 
       Console.WriteLine("====================");
-      Console.WriteLine("Total matches: {0}", task.Result);
+      Console.WriteLine("Total matches: {0}", imageProcessor.copyMatchingImages(srcDirectory, dstDirectory, imageFilters));
 
       Console.ReadLine();
     }

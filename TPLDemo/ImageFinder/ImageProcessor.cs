@@ -124,7 +124,6 @@ namespace ImageFinder
     {
       var pipeline = pipelineFactory(imageFilters, consumerAction);
 
-      Console.WriteLine("Processing {0} file(s)", paths.Count());
       foreach (string path in paths)
       {
         await pipeline.producer.SendAsync(path);
@@ -135,13 +134,127 @@ namespace ImageFinder
 
 
     /// <summary>
-    /// Copy images that match filters
+    /// Search, filter and apply action to images
+    /// </summary>
+    /// <param name="directory"></param>
+    /// <param name="imageFilters"></param>
+    /// <param name="matchAction"></param>
+    private void processImages(IEnumerable<string> paths, IEnumerable<Predicate<Image>> imageFilters, Action<string> matchAction)
+    {
+      var results = Parallel.ForEach(paths, new ParallelOptions { MaxDegreeOfParallelism = this.degreeOfParallelism }, 
+        (path) =>
+        {
+          try
+          {
+            using (Image img = Image.FromFile(path))
+            {
+              if (imageFilters.All(filter => filter.Invoke(img)))
+              {
+                matchAction.Invoke(path);
+              }
+            }
+          }
+          catch (Exception ex)
+          {
+
+          }
+        });
+    }
+
+
+    /// <summary>
+    /// Get a collection of image files in specified directory
+    /// </summary>
+    /// <param name="srcDirectory"></param>
+    /// <returns></returns>
+    private IEnumerable<string> getImageFiles(string srcDirectory)
+    {
+      return Directory.EnumerateFiles(srcDirectory, "*.jpg", SearchOption.AllDirectories);
+    }
+
+
+    /// <summary>
+    /// Generate destination filename
+    /// </summary>
+    /// <param name="destination"></param>
+    /// <param name="srcFilename"></param>
+    /// <returns></returns>
+    private string generateFileName(string destination, string srcFilename)
+    {
+      string newFile;
+      if (File.Exists(Path.Combine(destination, srcFilename)))
+      {
+        StringBuilder filenameBuilder = new StringBuilder();
+
+        string[] nameParts = srcFilename.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
+
+        filenameBuilder
+          .Append(nameParts[0])
+          .Append("_")
+          .Append(DateTime.Now.ToString("yyyyMMddHHmmssfff"))
+          .Append(".")
+          .Append(nameParts[1]);
+
+        newFile = Path.Combine(destination, filenameBuilder.ToString());
+      }
+      else
+      {
+        newFile = Path.Combine(destination, srcFilename);
+      }
+
+      return newFile;
+    }
+
+
+    /// <summary>
+    /// Copy images that match filters 
+    /// </summary>
+    /// <param name="directory"></param>
+    /// <param name="destination"></param>
+    /// <param name="imageFilters"></param>
+    /// <returns></returns>
+    public int copyMatchingImages(string directory, string destination, IEnumerable<Predicate<Image>> imageFilters)
+    {
+      int matchedFiles = 0;
+      destination = Path.Combine(destination, "img_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
+      bool destinationExists = Directory.Exists(destination);
+
+      // define action that copies matched images to a destination
+      Action<string> matchAction =
+        (path) =>
+        {
+          string srcFilename = path.Split(new string[] { "\\" }, StringSplitOptions.RemoveEmptyEntries).Last();
+
+          // check if destination file exists
+          string newFile = generateFileName(destination, srcFilename);
+
+          if (!destinationExists)
+          {
+            Directory.CreateDirectory(destination);
+            destinationExists = true;
+          }
+
+          File.Copy(path, newFile);
+
+          Console.WriteLine("Copied {0}", srcFilename);
+          Interlocked.Increment(ref matchedFiles);
+        };
+
+
+      processImages(getImageFiles(directory), imageFilters, matchAction);
+
+      return matchedFiles;
+    }
+
+
+    /// <summary>
+    /// Copy images that match filters asynchronously
     /// </summary>
     /// <param name="directory"></param>
     /// <param name="destination"></param>
     /// <param name="imageFilters"></param>
     /// <returns>Number of matched images</returns>
-    public async Task<int> copyMatchingImages(string directory, string destination, IEnumerable<Predicate<Image>> imageFilters)
+    public async Task<int> copyMatchingImagesAsync(string directory, string destination, IEnumerable<Predicate<Image>> imageFilters)
     {
       int matchedFiles = 0;
       destination = Path.Combine(destination, "img_" + DateTime.Now.ToString("yyyyMMddHHmmss"));
@@ -151,28 +264,10 @@ namespace ImageFinder
       ConsumerAction consumerAction =
         async (src) =>
         {
-          StringBuilder filenameBuilder = new StringBuilder();
-          string srcFileName = src.Name.Split(new string[]{"\\"}, StringSplitOptions.RemoveEmptyEntries).Last();
+          string srcFilename = src.Name.Split(new string[]{"\\"}, StringSplitOptions.RemoveEmptyEntries).Last();
 
           // check if destination file exists
-          string newFile;
-          if (File.Exists(Path.Combine(destination, srcFileName)))
-          {
-            string[] nameParts = srcFileName.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            filenameBuilder
-              .Append(nameParts[0])
-              .Append("_")
-              .Append(DateTime.Now.ToString("yyyyMMddHHmmssfff"))
-              .Append(".")
-              .Append(nameParts[1]);
-
-            newFile = Path.Combine(destination, filenameBuilder.ToString());
-          }
-          else
-          {
-            newFile = Path.Combine(destination, srcFileName);
-          }
+          string newFile = generateFileName(destination, srcFilename);
 
           if (!destinationExists)
           {
@@ -187,13 +282,12 @@ namespace ImageFinder
             await dst.FlushAsync();
           }
 
-          Console.WriteLine("Copied {0}", srcFileName);
+          Console.WriteLine("Copied {0}", srcFilename);
           Interlocked.Increment(ref matchedFiles);
         };
 
-      var paths = Directory.EnumerateFiles(directory, "*.jpg", SearchOption.AllDirectories);
 
-      await pipelineRunner(paths, imageFilters, consumerAction);
+      await pipelineRunner(getImageFiles(directory), imageFilters, consumerAction);
 
       return matchedFiles;
     }
@@ -204,8 +298,30 @@ namespace ImageFinder
     /// </summary>
     /// <param name="directory"></param>
     /// <param name="imageFilters"></param>
+    /// <returns></returns>
+    public IEnumerable<string> searchImages(string directory, IEnumerable<Predicate<Image>> imageFilters)
+    {
+      ConcurrentQueue<string> matches = new ConcurrentQueue<string>();
+
+      Action<string> matchAction =
+        (path) =>
+        {
+          matches.Enqueue(path);
+        };
+
+      processImages(getImageFiles(directory), imageFilters, matchAction);
+
+      return matches;
+    }
+
+
+    /// <summary>
+    /// Search images that match supplied filters asynchronously
+    /// </summary>
+    /// <param name="directory"></param>
+    /// <param name="imageFilters"></param>
     /// <returns>Collection of image paths</returns>
-    public async Task<IEnumerable<string>> searchImages(string directory, IEnumerable<Predicate<Image>> imageFilters)
+    public async Task<IEnumerable<string>> searchImagesAsync(string directory, IEnumerable<Predicate<Image>> imageFilters)
     {
       ConcurrentQueue<string> matches = new ConcurrentQueue<string>();
 
@@ -214,13 +330,10 @@ namespace ImageFinder
         {
           // This is actually bad, sync code shouldn't be wrapped async...
           // But I did it anyways to match delegate signature
-          return Task.Factory.StartNew(
-            () => matches.Enqueue(src.Name));
+          return Task.Factory.StartNew(() => matches.Enqueue(src.Name));
         };
 
-      var paths = Directory.EnumerateFiles(directory, "*.jpg", SearchOption.AllDirectories);
-
-      await pipelineRunner(paths, imageFilters, consumerAction);
+      await pipelineRunner(getImageFiles(directory), imageFilters, consumerAction);
 
       return matches;
     }
